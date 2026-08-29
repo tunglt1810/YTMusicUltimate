@@ -289,11 +289,6 @@ static BOOL YTMU(NSString *key) {
 }
 %end
 
-%hook YTOfflineButtonPromoController
-- (void)showOfflinePromoWithRenderer:(id)arg1 endpoint:(id)arg2 parentResponder:(id)arg3 {
-    if (!YTMU(@"YTMUltimateIsEnabled")) %orig;
-}
-%end
 
 %hook YTMCarPlayController
 - (BOOL)isPremiumSubscriber{
@@ -304,14 +299,6 @@ static BOOL YTMU(NSString *key) {
 }
 %end
 
-%hook YTMYPCGetOfflineUpsellEndpointCommandHandler
-- (BOOL)isPremiumSubscriber{
-    return YTMU(@"YTMUltimateIsEnabled") ? YES : %orig;
-}
-- (void)setIsPremiumSubscriber:(BOOL)premium {
-    YTMU(@"YTMUltimateIsEnabled") ? %orig(YES) : %orig;
-}
-%end
 
 %hook YTMWAWatchAppConfig
 - (BOOL)isCurrentUserPremium {
@@ -357,10 +344,6 @@ static BOOL YTMU(NSString *key) {
 - (BOOL)isDistributedBuild { return YTMU(@"YTMUltimateIsEnabled") ? NO : %orig; }
 %end
 
-%hook YTMYPCGetOfflineUpsellEndpointCommandHandlerImpl
-- (BOOL)isPremiumSubscriber { return YTMU(@"YTMUltimateIsEnabled") ?: %orig; }
-%end
-
 %hook YTMCarPlayControllerImpl
 - (BOOL)isPremiumSubscriber { return YTMU(@"YTMUltimateIsEnabled") ?: %orig; }
 - (void)setPremiumSubscriber:(BOOL)arg1 { return YTMU(@"YTMUltimateIsEnabled") ? %orig(YES) : %orig; }
@@ -387,12 +370,6 @@ static BOOL YTMU(NSString *key) {
 }
 - (void)presentInterstitialPromoForEvent:(id)arg {
     if (!YTMU(@"YTMUltimateIsEnabled")) %orig;
-}
-- (void)setOfflineButtonPromoController:(id)arg {
-    if (!YTMU(@"YTMUltimateIsEnabled")) %orig;
-}
-- (id)offlineButtonPromoController {
-    return YTMU(@"YTMUltimateIsEnabled") ? nil : %orig;
 }
 - (void)executeCommandWrapperPromoRenderer:(id)arg1 firstResponder:(id)arg2 {
     if (!YTMU(@"YTMUltimateIsEnabled")) %orig;

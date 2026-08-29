@@ -1,5 +1,23 @@
 #import "FFMpegDownloader.h"
 
+static UIWindow *getFFMpegKeyWindow(void) {
+    if (@available(iOS 13.0, *)) {
+        NSSet<UIScene *> *scenes = [UIApplication sharedApplication].connectedScenes;
+        for (UIScene *scene in scenes) {
+            if (scene.activationState == UISceneActivationStateForegroundActive && [scene isKindOfClass:[UIWindowScene class]]) {
+                UIWindowScene *windowScene = (UIWindowScene *)scene;
+                for (UIWindow *window in windowScene.windows) {
+                    if (window.isKeyWindow) return window;
+                }
+                if (windowScene.windows.count > 0) {
+                    return windowScene.windows.firstObject;
+                }
+            }
+        }
+    }
+    return [UIApplication sharedApplication].windows.firstObject;
+}
+
 @implementation FFMpegDownloader {
 
     Statistics *statistics;
@@ -20,9 +38,12 @@
         [self setActive];
     });
 
-    self.hud = [MBProgressHUD showHUDAddedTo:[UIApplication sharedApplication].keyWindow animated:YES];
-    self.hud.mode = MBProgressHUDModeAnnularDeterminate;
-    self.hud.label.text = LOC(@"DOWNLOADING");
+    UIWindow *window = getFFMpegKeyWindow();
+    if (window) {
+        self.hud = [MBProgressHUD showHUDAddedTo:window animated:YES];
+        self.hud.mode = MBProgressHUDModeAnnularDeterminate;
+        self.hud.label.text = LOC(@"DOWNLOADING");
+    }
 
     NSURL *documentsURL = [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] lastObject];
     NSURL *destinationURL = [documentsURL URLByAppendingPathComponent:[NSString stringWithFormat:@"%@.m4a", self.tempName]];
@@ -41,16 +62,19 @@
 
                 if (isMoved) {
                     [[NSNotificationCenter defaultCenter] postNotificationName:@"ReloadDataNotification" object:nil];
-                    self.hud = [MBProgressHUD showHUDAddedTo:[UIApplication sharedApplication].keyWindow animated:YES];
-                    self.hud.mode = MBProgressHUDModeCustomView;
-                    self.hud.label.text = LOC(@"DONE");
-                    self.hud.label.numberOfLines = 0;
+                    UIWindow *window = getFFMpegKeyWindow();
+                    if (window) {
+                        self.hud = [MBProgressHUD showHUDAddedTo:window animated:YES];
+                        self.hud.mode = MBProgressHUDModeCustomView;
+                        self.hud.label.text = LOC(@"DONE");
+                        self.hud.label.numberOfLines = 0;
 
-                    UIImageView *checkmarkImageView = [[UIImageView alloc] initWithImage:[self imageWithSystemIconNamed:@"checkmark"]];
-                    checkmarkImageView.contentMode = UIViewContentModeScaleAspectFit;
-                    self.hud.customView = checkmarkImageView;
+                        UIImageView *checkmarkImageView = [[UIImageView alloc] initWithImage:[self imageWithSystemIconNamed:@"checkmark"]];
+                        checkmarkImageView.contentMode = UIViewContentModeScaleAspectFit;
+                        self.hud.customView = checkmarkImageView;
 
-                    [self.hud hideAnimated:YES afterDelay:3.0];
+                        [self.hud hideAnimated:YES afterDelay:3.0];
+                    }
                 }
             } else if (returnCode == RETURN_CODE_CANCEL) {
                 [self.hud hideAnimated:YES];
@@ -143,15 +167,18 @@
         UIImage *image = [UIImage imageWithData:imageData];
 
         if (image) UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil);
-        self.hud = [MBProgressHUD showHUDAddedTo:[UIApplication sharedApplication].keyWindow animated:YES];
-        self.hud.mode = MBProgressHUDModeCustomView;
-        self.hud.label.text = LOC(@"SAVED_TO_PHOTOS");
+        UIWindow *window = getFFMpegKeyWindow();
+        if (window) {
+            self.hud = [MBProgressHUD showHUDAddedTo:window animated:YES];
+            self.hud.mode = MBProgressHUDModeCustomView;
+            self.hud.label.text = LOC(@"SAVED_TO_PHOTOS");
 
-        UIImageView *checkmarkImageView = [[UIImageView alloc] initWithImage:[self imageWithSystemIconNamed:@"checkmark"]];
-        checkmarkImageView.contentMode = UIViewContentModeScaleAspectFit;
-        self.hud.customView = checkmarkImageView;
+            UIImageView *checkmarkImageView = [[UIImageView alloc] initWithImage:[self imageWithSystemIconNamed:@"checkmark"]];
+            checkmarkImageView.contentMode = UIViewContentModeScaleAspectFit;
+            self.hud.customView = checkmarkImageView;
 
-        [self.hud hideAnimated:YES afterDelay:2.0];
+            [self.hud hideAnimated:YES afterDelay:2.0];
+        }
     });
 }
 
@@ -180,8 +207,10 @@
         [[NSFileManager defaultManager] removeItemAtURL:mediaURL error:nil];
     }];
 
-    UIViewController *rootViewController = [UIApplication sharedApplication].keyWindow.rootViewController;
-    [rootViewController presentViewController:activityViewController animated:YES completion:nil];
+    UIViewController *rootViewController = getFFMpegKeyWindow().rootViewController;
+    if (rootViewController) {
+        [rootViewController presentViewController:activityViewController animated:YES completion:nil];
+    }
 }
 
 @end

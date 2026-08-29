@@ -11,6 +11,7 @@
 @property (nonatomic, weak, readonly) YTMNowPlayingViewController *parentResponder;
 
 - (void)ytmuButtonAction:(MDCButton *)sender;
+- (void)didTapDownloadButton:(id)sender;
 - (void)downloadAudio;
 - (void)downloadCoverImage;
 @end
